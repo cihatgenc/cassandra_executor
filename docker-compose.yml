@@ -1,0 +1,48 @@
+version: "2"
+
+services:
+  db:
+    image: "cassandra"
+    ports:
+      - "7000:7000"
+      - "7001:7001"
+      - "7199:7199"
+      - "9042:9042"
+      - "9160:9160"
+
+  migrations:
+    image: cihatgenc/cassandra_client
+    depends_on:
+      - db
+    links:
+      - db
+    environment:
+      GIT_REPO: "https://github.com/cihatgenc/cassandraclienttest.git"
+      CASSANDRA_HOST: db
+      CASSANDRA_PORT: 9042
+      CASSANDRA_KEYSPACE: testdatabase
+      ACTION: migrations
+
+  fixtures:
+    image: cihatgenc/cassandra_client
+    depends_on:
+      - db
+    links:
+      - db
+    environment:
+      GIT_REPO: "https://github.com/cihatgenc/cassandraclienttest.git"
+      CASSANDRA_HOST: db
+      CASSANDRA_PORT: 9042
+      ACTION: fixtures
+
+  mycommand:
+    image: mycexectest
+    depends_on:
+      - db
+    links:
+      - db
+    command: cqlsh db 9042 -e "select * from testdatabase.testtable1 limit 10;"
+    environment:
+      CASSANDRA_HOST: db
+      CASSANDRA_PORT: 9042
+      DELAY: 20
